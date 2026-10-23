@@ -1,0 +1,283 @@
+#PSYCH 221a Project
+##Gabriel Hammond 
+
+
+
+##Hypotheses
+
+###H1: Male sex will predict higher rates of prior infection with disease (sum of pathogen prevalence scores) compared to female sex because testosterone suppresses immune function.
+
+###H2: An increased degree of political difference in a relationship will predict lower relationship happiness because of the difficulty of reconciling opposing worldviews in domestic settings.
+
+
+```{r Load packages and import data}
+library(codebook)
+library(tidyverse)
+
+
+raw <- read.csv("Data/Raw_Data/data_doctored.csv")
+
+#Pulling out the necessary variables 
+data <- raw[,c("ResponseId","Sex_birth","Relationship_status",
+                 "Pathogen_Prevalence_1","Pathogen_Prevalence_2",
+               "Pathogen_Prevalence_3","Pathogen_Prevalence_4",
+               "Pathogen_Prevalence_5","Pathogen_Prevalence_6",
+               "Pathogen_Prevalence_7","Pathogen_Prevalence_8",
+               "Pathogen_Prevalence_9","cot_politics_recoded","cpt_politics_recoded", "prqc_3"
+               )]
+
+dim(data)
+str(data)
+
+
+```
+
+
+
+
+```{r participant_ids}
+
+#count na
+
+sum(is.na(data$ResponseId))
+
+#count blank
+
+sum(data$ResponseId=="",na.rm=TRUE)
+
+#count duplicates
+
+sum(duplicated(data$ResponseId))
+summary(data$ResponseId)
+
+#inspect records with missing or blank IDs
+
+missingID <- which(is.na(data$ResponseId))
+print(data[missingID,])
+
+#remove the known empty record with no ID, then check the row count
+
+data <- data[!is.na(data$ResponseId),]
+
+```
+
+```{r sex_at_birth}
+# codebook: 0 = Male, 1 = Female, 2 = Intersex
+
+table(data$Sex_birth,useNA="ifany")
+
+#turn Sex_birth into a factor with labels Male, Female, and Intersex
+
+data$Sex_birth <- factor(data$Sex_birth,
+                         levels = c(0,1,2),
+                         labels = c("Male","Female","Intersex"))
+
+
+```
+
+
+
+```{r pathogen_prevalence}
+#group the pathogen_prevalence_ variables and calculate total
+
+pathvars <- c("Pathogen_Prevalence_1","Pathogen_Prevalence_2",
+               "Pathogen_Prevalence_3","Pathogen_Prevalence_4",
+               "Pathogen_Prevalence_5","Pathogen_Prevalence_6",
+               "Pathogen_Prevalence_7","Pathogen_Prevalence_8",
+               "Pathogen_Prevalence_9")
+
+#see summary of variables
+
+summary(data[,pathvars])
+
+#count NAs
+
+colSums(is.na(data[,pathvars]))
+
+
+#Remove pathogen rows with NAs
+
+path_cols <- c("Pathogen_Prevalence_1","Pathogen_Prevalence_2",
+               "Pathogen_Prevalence_3","Pathogen_Prevalence_4",
+               "Pathogen_Prevalence_5","Pathogen_Prevalence_6",
+               "Pathogen_Prevalence_7","Pathogen_Prevalence_8",
+               "Pathogen_Prevalence_9")
+
+data_path <- data %>% drop_na(all_of(path_cols))
+
+colSums(is.na(data_path[,pathvars]))
+
+#Make sure pathogen scores are between 0 and 2
+
+range(data_path[, c("Pathogen_Prevalence_1","Pathogen_Prevalence_2",
+               "Pathogen_Prevalence_3","Pathogen_Prevalence_4",
+               "Pathogen_Prevalence_5","Pathogen_Prevalence_6",
+               "Pathogen_Prevalence_7","Pathogen_Prevalence_8",
+               "Pathogen_Prevalence_9")], na.rm = TRUE)
+
+#calculate summed pathogen score
+
+data_path$path_sum <- rowSums(data_path[, c("Pathogen_Prevalence_1","Pathogen_Prevalence_2",
+               "Pathogen_Prevalence_3","Pathogen_Prevalence_4",
+               "Pathogen_Prevalence_5","Pathogen_Prevalence_6",
+               "Pathogen_Prevalence_7","Pathogen_Prevalence_8",
+               "Pathogen_Prevalence_9")], na.rm = TRUE)
+
+#values should range from 0-18 with no NAs 
+
+summary(data_path$path_sum)
+
+sum(is.na(data_path$path_sum))
+
+#make h1Data with ID, Sex_birth, and path_sum
+
+h1Data <- data_path[data_path$path_sum & !is.na(data_path$Sex_birth), c("ResponseId","Sex_birth","path_sum")]
+
+```
+
+```{r validate politics variables and calculate political difference}
+
+polvars <- c("cot_politics_recoded","cpt_politics_recoded", "prqc_3", "Relationship_status")
+
+#see summary of variables
+
+summary(data[,polvars])
+
+#count NAs
+
+colSums(is.na(data[,polvars]))
+
+
+#Remove political rows with NAs
+
+pol_cols <- c("cot_politics_recoded","cpt_politics_recoded", "prqc_3", "Relationship_status")
+
+data_pol <- data %>% drop_na(all_of(pol_cols))
+
+colSums(is.na(data_pol[,polvars]))
+
+#convert self political descriptions from text to numeric
+
+data_pol$cot_politics_recoded <- 
+  ifelse(data_pol$cot_politics_recoded == "far left political views", 1,
+                                        ifelse(data_pol$cot_politics_recoded == "center left political views",2,
+                                               ifelse(data_pol$cot_politics_recoded == "center political views",3,
+                                                      ifelse(data_pol$cot_politics_recoded == "center right political views",4,
+                                                             ifelse(data_pol$cot_politics_recoded == "far right political views", 5,data_pol$cot_politics_recoded))
+                                                 
+                                               )))
+#make sure it's numeric
+
+data_pol$cot_politics_recoded <- as.numeric(data_pol$cot_politics_recoded)
+
+
+#do the same for partner political descriptions 
+
+data_pol$cpt_politics_recoded <- ifelse(data_pol$cpt_politics_recoded == "far left political views", 1,
+                                 ifelse(data_pol$cpt_politics_recoded == "center left political views", 2,
+                                 ifelse(data_pol$cpt_politics_recoded == "center political views", 3,
+                                 ifelse(data_pol$cpt_politics_recoded == "center right political views", 4,
+                                 ifelse(data_pol$cpt_politics_recoded == "far right political views", 5, 
+                                        data_pol$cpt_politics_recoded)))))
+
+#make sure it's numeric
+
+data_pol$cpt_politics_recoded <- as.numeric(data_pol$cpt_politics_recoded)
+
+
+#calculate political difference score
+
+data_pol$pol_diff <- data_pol$cot_politics_recoded - data_pol$cpt_politics_recoded
+
+#check range of values, should go from -4 to 4
+
+summary(data_pol$pol_diff)
+
+#convert to absolute difference
+data_pol$pol_diff <- abs(data_pol$pol_diff)
+
+summary(data_pol$pol_diff)
+
+#make h2Data with ID, political vars, prqc_3, and Relationship_status
+
+h2Data <- data_pol[data_pol$pol_diff & !is.na(data_pol$Relationship_status) & !is.na(data_pol$prqc_3), c("ResponseId", "cot_politics_recoded","cpt_politics_recoded", "prqc_3", "Relationship_status", "pol_diff")]
+
+```
+
+```{r final_tables}
+#check rows, columns, types, and missing values in h1Data
+#one row per participant, one column per variable
+dim(h1Data)
+str(h1Data)
+head(h1Data)
+colSums(is.na(h1Data))
+table(h1Data$Sex_birth,useNA="ifany")
+range(h1Data$path_sum)
+sum(duplicated(h1Data$ResponseId))
+
+#repeat the checks for h2Data
+dim(h2Data)
+str(h2Data)
+head(h2Data)
+colSums(is.na(h2Data))
+range(h2Data$pol_diff)
+range(h2Data$prqc_3)
+range(h2Data$Relationship_status)
+sum(duplicated(h2Data$ResponseId))
+
+```
+
+
+```{r variable_labels}
+#description of each h1Data column, in column order
+var_label(h1Data) <- c(
+  "Unique participant ID (ResponseId)",
+  "Sex at birth: original codes 0=Male, 1=Female, 2=Intersex; now stored as a factor",
+  "Prior infection to specific pathogens, where 0 = no infection and 18 = repeated infection with 9 pathogens"
+)
+
+#add a description to each h2Data column, in column order
+#include response anchors and the commitment scoring rule
+var_label(h2Data) <- c(
+  "Unique participant ID (ResponseId)",
+  "Political views of self where far left political views = 1, center left political views = 2, center political views = 3, center right political views = 4, and far right political views = 5",
+  "Political views of partner where far left political views = 1, center left political views = 2, center political views = 3, center right political views = 4, and far right political views = 5",
+  "Relationship Satisfaction: How happy are you in your relationship? Values range from 1 (low) to 7 (high)",
+  "Relationship Status: Single (0), Dating (1), In a committed relationship (2), Married (3)",
+  "Political Difference, reflecting the absolute difference between self and partner's political beliefs"
+)
+
+```
+
+
+```{r h1_codebook}
+#generate the h1Data codebook
+compact_codebook(h1Data)
+
+```
+
+
+```{r h2_codebook}
+#generate the h2Data codebook
+compact_codebook(h2Data)
+
+```
+
+
+```{r save}
+#create data/processed_data if needed
+dir.create("data/processed_data",recursive=T,showWarnings=F)
+
+#save h1Data and h2Data without an extra row-number column
+write.csv(h1Data,"data/processed_data/h1.csv",row.names=F)
+write.csv(h2Data,"data/processed_data/h2.csv",row.names=F)
+
+#read the files back and confirm their dimensions
+h1Saved <- read.csv("data/processed_data/h1.csv")
+h2Saved <- read.csv("data/processed_data/h2.csv")
+dim(h1Saved)
+dim(h2Saved)
+
+```
+
+
