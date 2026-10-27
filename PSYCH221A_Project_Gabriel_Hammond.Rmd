@@ -131,6 +131,21 @@ sum(is.na(data_path$path_sum))
 
 #make h1Data with ID, Sex_birth, and path_sum
 
+###JK: Keep participants with a pathogen score of zero; zero is a valid response, not a missing value. ###
+# When you use path_sum directly as a condition, R treats 0 as FALSE and nonzero scores as TRUE.
+# This removes everyone reporting no infection across the nine items.
+# Replace the h1Data assignment below with an explicit missing-value check:
+# h1Data <- data_path[
+#   !is.na(data_path$path_sum) & !is.na(data_path$Sex_birth),
+#   c("ResponseId", "Sex_birth", "path_sum")
+# ]
+# Then confirm that zero scores are retained:
+# nrow(h1Data)
+# sum(h1Data$path_sum == 0)
+# range(h1Data$path_sum)
+# With your current inclusion rules, H1 should contain 97,369 participants, including those with zero scores.
+###  End of comment ###
+
 h1Data <- data_path[data_path$path_sum & !is.na(data_path$Sex_birth), c("ResponseId","Sex_birth","path_sum")]
 
 ```
@@ -199,6 +214,30 @@ data_pol$pol_diff <- abs(data_pol$pol_diff)
 summary(data_pol$pol_diff)
 
 #make h2Data with ID, political vars, prqc_3, and Relationship_status
+
+###JK: The same issue occurs here: a political difference of zero means matching political views and should be retained. ###
+# Using pol_diff directly as a condition drops all 32,169 participants whose political views match their partner's.
+# Replace the h2Data assignment below with:
+# h2Data <- data_pol[
+#   !is.na(data_pol$pol_diff) & !is.na(data_pol$Relationship_status) & !is.na(data_pol$prqc_3),
+#   c("ResponseId", "cot_politics_recoded", "cpt_politics_recoded", "prqc_3", "Relationship_status", "pol_diff")
+# ]
+# Check that the full 0-4 difference range is represented:
+# table(h2Data$pol_diff, useNA = "ifany")
+# nrow(h2Data)
+# With your current inclusion rules, H2 should contain 48,250 participants before any additional relationship-status restriction.
+###  End of comment ###
+
+###JK: I recommend keeping relationship statuses 1 (Dating), 2 (Committed relationship), and 3 (Married) for H2. ###
+# 0 means Single.
+# Some participants who reported being single also answered prqc_3, the relationship happiness question.
+# I checked the original codebook, but I could not find an explanation for why they answered it.
+# It is up to you, but since your hypothesis concerns people in relationships, I recommend using only statuses 1, 2, and 3.
+# If you follow this recommendation, add the following line AFTER creating the corrected h2Data:
+# h2Data <- h2Data[h2Data$Relationship_status %in% c(1, 2, 3), ]
+# table(h2Data$Relationship_status, useNA = "ifany")
+# Please also describe your decision in your codebook or inclusion notes.
+###  End of comment ###
 
 h2Data <- data_pol[data_pol$pol_diff & !is.na(data_pol$Relationship_status) & !is.na(data_pol$prqc_3), c("ResponseId", "cot_politics_recoded","cpt_politics_recoded", "prqc_3", "Relationship_status", "pol_diff")]
 
