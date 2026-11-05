@@ -1,0 +1,55 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+#PSYCH 221a Project - Visualizations
+##Gabriel Hammond 
+
+
+```{r Load data}
+
+H1 <- read.csv("Data/Processed_Data/h1.csv")
+
+H2 <- read.csv("Data/Processed_Data/h2.csv")
+
+```
+
+
+
+```{r H1 Visualization}
+
+#H1: Male sex will predict higher rates of prior infection with disease (sum of pathogen prevalence scores) compared to female sex because testosterone suppresses immune function
+
+ggplot(H1,
+       aes(x = Sex_birth,
+           y = path_sum,
+           fill = Sex_birth)) +
+  geom_boxplot() +
+  geom_violin() +
+  labs(x = "Sex at Birth",
+       y = "History of Infection")
+
+
+#My hypothesis does not appear to be supported. Ignoring the intersex boxplot (likely skewed by a small sample size), the male and female distributions appear to be largely similar. 
+
+```
+
+```{r H2 Visualization}
+
+#H2: An increased degree of political difference in a relationship will predict lower relationship happiness because of the difficulty of reconciling opposing worldviews in domestic settings.
+
+ggplot(H2,
+       aes(x = pol_diff,
+       y = prqc_3)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  geom_jitter() +
+  labs(x = "Political Difference in Relationship",
+       y = "Relationship Happiness")
+
+#Here my hypothesis does appear to be supported, relationships that have a lesser degree of political difference appear to report higher relationship happiness, and vice versa. 
+
+```
+
+

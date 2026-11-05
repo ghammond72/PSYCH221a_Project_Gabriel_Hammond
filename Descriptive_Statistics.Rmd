@@ -1,0 +1,139 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+#PSYCH 221a Project - Descriptive Statistics 
+##Gabriel Hammond 
+
+
+
+## 1. Load the processed data
+
+```{r load packages and data}
+
+library(psych)
+
+H1 <- read.csv("Data/Processed_Data/h1.csv")
+H2 <- read.csv("Data/Processed_Data/h2.csv")
+
+
+
+```
+
+
+```{r variable distributions}
+
+#H1:
+
+hist(H1$path_sum,
+     main = "Distribution of History of Infection",
+     xlab = "Composite Pathogen Score (0-18)")
+
+sum(H1$Sex_birth == "Intersex") #49
+sum(H1$Sex_birth == "Male") #4004
+sum(H1$Sex_birth == "Female") #5019
+
+
+#H2: 
+
+hist(H2$pol_diff,
+     main = "Distribution of Political Difference in Relationships",
+     xlab = "Political Difference (0-4)")
+
+hist(H2$prqc_3,
+     main = "Distribution of Happiness in Relationship",
+     xlab = "Relatinship Happiness (1-7)")
+
+
+```
+
+
+```{r individual statistics}
+
+#H1
+
+mean(H1$path_sum, na.rm = TRUE) #2.15388
+median(H1$path_sum, na.rm = TRUE) #1
+IQR(H1$path_sum, na.rm = TRUE) #1
+
+table(H1$Sex_birth, useNA = "ifany")
+
+#Female Intersex     Male 
+#  5019       49     4004 
+
+
+#H2
+
+mean(H2$prqc_3, na.rm = TRUE) #5.484982
+median(H2$prqc_3, na.rm = TRUE) #6
+IQR(H2$prqc_3, na.rm = TRUE) #2
+
+mean(H2$pol_diff, na.rm = TRUE) #1.294322
+median(H2$pol_diff, na.rm = TRUE) #1
+IQR(H2$pol_diff, na.rm = TRUE) #1
+
+
+
+```
+
+
+```{r standardize variables}
+
+#H1:
+
+H1$path_z <- scale(H1$path_sum)
+
+mean(H1$path_z, na.rm = TRUE) #Almost zero 
+sd(H1$path_z, na.rm = TRUE) #1
+
+
+
+
+#H2: 
+
+H2$happiness_z <- scale(H2$prqc_3)
+
+# Standardized scores have mean approximately 0 and standard deviation 1.
+mean(H2$happiness_z, na.rm = TRUE) #Almost zero 
+sd(H2$happiness_z, na.rm = TRUE) #1
+
+
+H2$pol_diff_z <- scale(H2$pol_diff)
+
+mean(H2$pol_diff_z, na.rm = TRUE) #Almost zero 
+sd(H2$pol_diff_z, na.rm = TRUE) #1
+
+
+
+```
+
+
+```{r Covariance for H2}
+# Covariance describes whether two variables tend to move together.
+# Positive: higher values tend to occur together. Negative: higher values tend to accompany lower values.
+# Its size depends on the units and is not restricted to -1 through 1.
+#use = complete.obs means you only use if there's observations for both
+
+cov(H2$pol_diff, H2$prqc_3, use = "complete.obs") # -0.06488937
+
+# Pearson correlation expresses a linear association on a -1 to 1 scale.
+cor(H2$pol_diff, H2$prqc_3, use = "complete.obs") # -0.07551288
+#slight negative correlation
+
+# Make a correlation table: Select numerical variables only; do not include participant IDs or category codes.
+corData <- H2[,c("pol_diff", "prqc_3")]
+cor(corData, use = "complete.obs")
+
+```
+
+
+```{r combined summaries}
+# summary() reports minimum, quartiles, median, mean, maximum, and missing counts when present.
+summary(corData)
+
+# psych::describe() reports n, mean, SD, median, minimum, maximum, range width (max minus min), skewness, kurtosis, and other summaries.
+describe(corData)
+
+```
+
