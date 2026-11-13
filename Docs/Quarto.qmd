@@ -1,0 +1,107 @@
+---
+title: "Sex-Biases in Infection History and Effects of Political Difference on Relationship Happiness"
+author: "Gabriel Hammond"
+format:
+  html:
+    toc: true
+    code-fold: true
+    embed-resources: true
+execute:
+  echo: true
+---
+
+```{r}
+#| label: load-data
+#| include: false
+library(ggplot2)
+library(ggrain)
+library(psych)
+
+H1 <- read.csv("Data/Processed_Data/h1.csv")
+H2 <- read.csv("Data/Processed_Data/h2.csv")
+```
+
+## Hypothesis 1
+
+Male sex will predict higher rates of prior infection with disease (sum of pathogen prevalence scores) compared to female sex because testosterone suppresses immune function.
+
+### Variables and descriptive statistics
+
+-   **Sex at birth (`Sex_birth`):** A categorical variable with three groups: Male, Female, and Intersex.
+-   **Sum of Pathogen Scores (`path_sum`):** Measures prior infection to specific pathogens, ranges from 0-18 where 0 = no history of infection and 18 = repeated infection with 9 different pathogens
+
+```{r}
+#| label: h1-descriptives
+# Count respondents in each group.
+table(H1$Sex_birth)
+
+# Summarize attractiveness points separately for each group.
+by(H1$path_sum, H1$Sex_birth, summary)
+```
+
+### Graph
+
+@fig-infection-history shows the distribution of points by sex at birth. The half-violin shows the shape of the distribution, the box summarizes the median and quartiles, and the dots represent individual responses.
+
+```{r}
+#| label: fig-infection-history
+#| fig-cap: "History of infection by sex at birth."
+#| fig-width: 8
+#| fig-height: 5
+
+ggplot(H1,
+       aes(x = Sex_birth,
+           y = path_sum,
+           fill = Sex_birth)) +
+  geom_boxplot() +
+  geom_violin() +
+  labs(x = "Sex at Birth",
+       y = "History of Infection")
+```
+
+## Hypothesis 2
+
+An increased degree of political difference in a relationship will predict lower relationship happiness because of the difficulty of reconciling opposing worldviews in domestic settings.
+
+### Variables and descriptive statistics
+
+-   **Relationship status (`Relationship_status`):** A categorical variable where Dating = 1, In a committed relationship = 2, and Married = 3. Respondents not in a relationship (0) were dropped from the data.
+
+-   **Relationship happiness (`prqc_3`):** Respondents answered "How happy are you in your relationship?" Values range from 1 (low) to 7 (high)
+
+-   **Political difference (`pol_diff`):** Values reflect the absolute difference between self and partner's political beliefs, ranging from 0 (no difference) to 4 (maximal distance). Political belief was measured on a 5-point left-right scale.
+
+```{r}
+#| label: h2-descriptives
+summary(H2[, c("Relationship_status", "prqc_3", "pol_diff")])
+```
+
+### Graph
+
+@fig-domestic-politics shows the relationship between degree of political difference and relationship happiness. The points are jittered to make them individually visible. The line summarizes the linear trend.
+
+```{r}
+#| label: fig-domestic-politics
+#| fig-cap: "Political disagreement with romantic partners and relationship happiness."
+#| fig-width: 8
+#| fig-height: 5
+
+ggplot(H2,
+       aes(x = pol_diff,
+       y = prqc_3)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  geom_jitter() +
+  labs(x = "Political Difference in Relationship",
+       y = "Relationship Happiness")
+```
+
+### Observed trend
+
+```{r}
+#| label: correlation
+r <- cor(H2$pol_diff, H2$prqc_3, use = "complete.obs")
+
+```
+
+There is a weak negative association, couples tend to be slightly less happy the further apart their politics are.
