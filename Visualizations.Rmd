@@ -19,6 +19,10 @@ H2 <- read.csv("Data/Processed_Data/h2.csv")
 
 ```{r H1 Visualization}
 
+H1$Sex_birth <- factor(H1$Sex_birth,
+                           levels=c("Male","Female","Intersex"))
+
+
 #H1: Male sex will predict higher rates of prior infection with disease (sum of pathogen prevalence scores) compared to female sex because testosterone suppresses immune function
 
 ggplot(H1,
