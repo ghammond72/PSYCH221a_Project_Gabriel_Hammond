@@ -6,7 +6,7 @@ editor_options:
 #PSYCH 221a Project - Descriptive Statistics 
 ##Gabriel Hammond 
 
-
+###JK: Good work! Nothing to revise :) ###
 
 ## 1. Load the processed data
 
