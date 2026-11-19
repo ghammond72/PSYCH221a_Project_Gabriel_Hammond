@@ -17,6 +17,14 @@ library(ggplot2)
 library(ggrain)
 library(psych)
 
+###JK: Include the processed data and make the paths work from this report's location. ###
+# The published website opens, but Render from a fresh copy stops at the CSV reads because neither processed CSV is tracked in the repository.
+# Add the CSVs to Data/processed_data. Since this QMD is inside docs, the reads would then be:
+# H1 <- read.csv("../Data/processed_data/h1.csv")
+# H2 <- read.csv("../Data/processed_data/h2.csv")
+# Check Render again after pushing the CSVs so the report can be reproduced from the repository.
+###  End of comment ###
+
 H1 <- read.csv("Data/Processed_Data/h1.csv")
 H2 <- read.csv("Data/Processed_Data/h2.csv")
 ```
